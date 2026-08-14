@@ -13,7 +13,7 @@ def clean_title(title: str) -> str | None:
     return cleaned_title
 
 
-def data_cleaner(input_files: list[Path], output_file: Path):
+def cleaner(input_files: list[Path], output_file: Path):
     with open(output_file, "w", newline="", encoding="utf-8") as f_out:
         writer = csv.writer(f_out)
 

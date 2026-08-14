@@ -1,8 +1,10 @@
-from pathlib import Path
+import csv
+
 import torch
-from ckip_transformers.nlp import CkipPosTagger, CkipWordSegmenter
+from pathlib import Path
 from crawler import crawler as data_crawler
-from cleaner import data_cleaner
+from cleaner import cleaner as data_cleaner
+from tokenizer import tokenizer as data_tokenizer
 
 BOARD_NAMES = [
     "Baseball",
@@ -17,9 +19,11 @@ BOARD_NAMES = [
 ]
 
 REQUIRED_TITLE_COUNT = 100
+CLEANED_DATA_FILE_PATH = "cleaned_data.csv"
+TOKENIZED_DATA_FILE_PATH = "tokenized_data.csv"
 
 
-def get_device():
+def get_device() -> torch.device:
     device = (
         acc
         if (acc := torch.accelerator.current_accelerator(check_available=True))
@@ -30,34 +34,40 @@ def get_device():
     return device
 
 
-def tokenizer():
-    device = get_device()
-    ws_driver = CkipWordSegmenter(model="bert-base", device=device)
-    pos_driver = CkipPosTagger(model="bert-base", device=device)
-    text_list = [
-        "前端工程師常用 Vue 與 TypeScript 開發網頁。",
-        "今天淡水天氣很好，適合出門散步。",
-    ]
-    ws_result = ws_driver(text_list)
-    pos_result = pos_driver(ws_result)
-    for ws_list, pos_list in zip(ws_result, pos_result):
-        for ws, pos in zip(ws_list, pos_list):
-            print(ws, pos)
-        print("---")
-    pass
+def convert_data_dict(input_path: Path) -> dict[str, list[str]]:
+    with open(input_path, "r", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        data_dict: dict[str, list[str]] = {}
+        for row in reader:
+            if not row:
+                continue
+            board, title = row[0], row[1]
+            if board not in data_dict:
+                data_dict[board] = []
+            data_dict[board].append(title)
+        return data_dict
 
 
 def main():
-    print("--- data crawler start ---")
-    for board_name in BOARD_NAMES:
-        data_crawler(board_name, REQUIRED_TITLE_COUNT)
-    print("--- data crawler done")
-    print("--- data cleaner start ---")
-    data_cleaner(
-        [Path(f"{board_name}.csv") for board_name in BOARD_NAMES], Path("raw_data.csv")
-    )
-    print("--- data cleaner done ---")
-    # tokenizer()
+    # print("--- data crawler start ---")
+    # for board_name in BOARD_NAMES:
+    #     data_crawler(board_name, REQUIRED_TITLE_COUNT)
+    # print("--- data crawler done")
+    # print("--- data cleaner start ---")
+    # data_cleaner(
+    #     [Path(f"{board_name}.csv") for board_name in BOARD_NAMES],
+    #     Path(CLEANED_DATA_FILE_PATH),
+    # )
+    # print("--- data cleaner done ---")
+    print("--- data tokenizer start ---")
+    data_dict = convert_data_dict(Path(CLEANED_DATA_FILE_PATH))
+    device = get_device()
+    with open(TOKENIZED_DATA_FILE_PATH, "w", newline="", encoding="utf-8") as f_out:
+        writer = csv.writer(f_out)
+        for board_name in data_dict:
+            words_list = data_tokenizer(data_dict[board_name], device)
+            writer.writerows([board_name, *words] for words in words_list)
+    print("--- data tokenizer done ---")
 
 
 if __name__ == "__main__":
