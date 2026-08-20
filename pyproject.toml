@@ -1,13 +1,14 @@
 [project]
-name = "week-1"
+name = "wehelp-dl-2"
 version = "0.1.0"
 description = "Add your description here"
 authors = [
     { name = "FLC", email = "paulespling@gmail.com" }
 ]
-requires-python = ">=3.14"
+requires-python = "==3.12.*"
 dependencies = [
     "ckip-transformers>=0.3.4",
+    "gensim>=4.4.0",
     "numpy>=2.5.2",
     "torch>=2.13.0",
 ]
