@@ -23,5 +23,7 @@ def tokenizer(
             if is_stop_pos(pos) or not ws.strip():
                 continue
             ws_output.append(ws.strip())
+        if not ws_output:
+            continue
         output.append(ws_output)
     return output

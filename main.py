@@ -5,6 +5,7 @@ from pathlib import Path
 from crawler import crawler as data_crawler
 from cleaner import cleaner as data_cleaner
 from tokenizer import tokenizer as data_tokenizer
+from embedding import embedding as data_embedding
 
 BOARD_NAMES = [
     "Baseball",
@@ -18,7 +19,7 @@ BOARD_NAMES = [
     "Tech_Job",
 ]
 
-REQUIRED_TITLE_COUNT = 100
+REQUIRED_TITLE_COUNT = 10000
 CLEANED_DATA_FILE_PATH = "cleaned_data.csv"
 TOKENIZED_DATA_FILE_PATH = "tokenized_data.csv"
 
@@ -59,15 +60,18 @@ def main():
     #     Path(CLEANED_DATA_FILE_PATH),
     # )
     # print("--- data cleaner done ---")
-    print("--- data tokenizer start ---")
-    data_dict = convert_data_dict(Path(CLEANED_DATA_FILE_PATH))
-    device = get_device()
-    with open(TOKENIZED_DATA_FILE_PATH, "w", newline="", encoding="utf-8") as f_out:
-        writer = csv.writer(f_out)
-        for board_name in data_dict:
-            words_list = data_tokenizer(data_dict[board_name], device)
-            writer.writerows([board_name, *words] for words in words_list)
-    print("--- data tokenizer done ---")
+    # print("--- data tokenizer start ---")
+    # data_dict = convert_data_dict(Path(CLEANED_DATA_FILE_PATH))
+    # device = get_device()
+    # with open(TOKENIZED_DATA_FILE_PATH, "w", newline="", encoding="utf-8") as f_out:
+    #     writer = csv.writer(f_out)
+    #     for board_name in data_dict:
+    #         words_list = data_tokenizer(data_dict[board_name], device)
+    #         writer.writerows([board_name, *words] for words in words_list)
+    # print("--- data tokenizer done ---")
+    print("--- data embedding start ---")
+    data_embedding(Path(TOKENIZED_DATA_FILE_PATH))
+    print("--- data embedding end ---")
 
 
 if __name__ == "__main__":
