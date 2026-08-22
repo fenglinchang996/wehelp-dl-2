@@ -5,8 +5,10 @@ from gensim.models.callbacks import CallbackAny2Vec
 from pathlib import Path
 
 DOC_2_VEC_VECTOR_SIZE = 200
-DOC_2_VEC_EPOCHS = 75
-TESTING_DOC_COUNT = 5000
+TRAINING_EPOCHS = 50
+INFERRING_EPOCHS = 50
+TESTING_DOC_COUNT = 1000
+DISPLAY_EPOCH_LOGS = True
 
 
 class EpochLogger(CallbackAny2Vec):
@@ -18,7 +20,8 @@ class EpochLogger(CallbackAny2Vec):
         pass
 
     def on_epoch_end(self, model):
-        print(f"Epoch {self.epoch} finished")
+        if DISPLAY_EPOCH_LOGS:
+            print(f"Model training epoch {self.epoch} finished")
         self.epoch += 1
 
 
@@ -43,7 +46,7 @@ def get_random_docs(docs: list[TaggedDocument], count: int):
 def similarity(model: Doc2Vec, testing_docs: list[TaggedDocument]):
     sim_ranks = []
     for doc in testing_docs:
-        vec = model.infer_vector(doc.words)
+        vec = model.infer_vector(doc.words, epochs=INFERRING_EPOCHS)
         sims = model.dv.most_similar([vec], topn=2)
         top_tags = [tag for tag, _ in sims]
         if doc.tags[0] == top_tags[0]:
@@ -62,13 +65,15 @@ def similarity(model: Doc2Vec, testing_docs: list[TaggedDocument]):
 def embedding(input_file: Path):
     training_docs = read_corpus(input_file)
     epoch_logger = EpochLogger()
-    model = Doc2Vec(vector_size=DOC_2_VEC_VECTOR_SIZE, min_count=2, workers=8)
+    model = Doc2Vec(
+        vector_size=DOC_2_VEC_VECTOR_SIZE, dm=0, dbow_words=0, min_count=2, workers=8
+    )
     model.build_vocab(training_docs)
     print("--- model training start ---")
     model.train(
         training_docs,
         total_examples=model.corpus_count,
-        epochs=DOC_2_VEC_EPOCHS,
+        epochs=TRAINING_EPOCHS,
         callbacks=[epoch_logger],
     )
     print("--- model training end ---")
