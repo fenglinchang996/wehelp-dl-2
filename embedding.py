@@ -1,8 +1,9 @@
 import csv
 import random
-from gensim.models.doc2vec import TaggedDocument, Doc2Vec
-from gensim.models.callbacks import CallbackAny2Vec
 from pathlib import Path
+
+from gensim.models.callbacks import CallbackAny2Vec
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
 DOC_2_VEC_VECTOR_SIZE = 200
 TRAINING_EPOCHS = 50
@@ -25,8 +26,8 @@ class EpochLogger(CallbackAny2Vec):
         self.epoch += 1
 
 
-def read_corpus(input_file: Path):
-    with open(input_file, "r", encoding="utf-8") as f:
+def read_corpus(input_corpus: Path):
+    with open(input_corpus, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
         tagged_docs: list[TaggedDocument] = []
         for i, row in enumerate(reader):
@@ -62,8 +63,8 @@ def similarity(model: Doc2Vec, testing_docs: list[TaggedDocument]):
     return self_similarity, second_self_similarity
 
 
-def embedding(input_file: Path):
-    training_docs = read_corpus(input_file)
+def embedding(input_corpus_path: Path):
+    training_docs = read_corpus(input_corpus_path)
     epoch_logger = EpochLogger()
     model = Doc2Vec(
         vector_size=DOC_2_VEC_VECTOR_SIZE, dm=0, dbow_words=0, min_count=2, workers=8
@@ -85,5 +86,4 @@ def embedding(input_file: Path):
         f"second_self_similarity with {TESTING_DOC_COUNT} docs : {second_self_similarity}"
     )
     print("--- self similarity end ---")
-    if second_self_similarity > 0.8:
-        model.save("doc2vec_model")
+    return model

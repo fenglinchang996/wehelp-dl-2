@@ -1,11 +1,14 @@
 import csv
+from pathlib import Path
 
 import torch
-from pathlib import Path
-from crawler import crawler as data_crawler
+from gensim.models import Doc2Vec
+
+from classify import classify as data_classify
 from cleaner import cleaner as data_cleaner
-from tokenizer import tokenizer as data_tokenizer
+from crawler import crawler as data_crawler
 from embedding import embedding as data_embedding
+from tokenizer import tokenizer as data_tokenizer
 
 BOARD_NAMES = [
     "Baseball",
@@ -22,6 +25,7 @@ BOARD_NAMES = [
 REQUIRED_TITLE_COUNT = 10000
 CLEANED_DATA_FILE_PATH = "cleaned_data.csv"
 TOKENIZED_DATA_FILE_PATH = "tokenized_data.csv"
+EMBEDDING_MODEL_PATH = "doc2vec.model"
 
 
 def get_device() -> torch.device:
@@ -69,9 +73,15 @@ def main():
     #         words_list = data_tokenizer(data_dict[board_name], device)
     #         writer.writerows([board_name, *words] for words in words_list)
     # print("--- data tokenizer done ---")
-    print("--- data embedding start ---")
-    data_embedding(Path(TOKENIZED_DATA_FILE_PATH))
-    print("--- data embedding end ---")
+    # print("--- data embedding start ---")
+    # embedding_model = data_embedding(Path(TOKENIZED_DATA_FILE_PATH))
+    # embedding_model.save(EMBEDDING_MODEL_PATH)
+    # print("--- data embedding end ---")
+    print("--- data classify start ---")
+    doc2vec_model: Doc2Vec = Doc2Vec.load(EMBEDDING_MODEL_PATH)  # type: ignore
+    doc_vecs = doc2vec_model.dv
+    data_classify(Path(TOKENIZED_DATA_FILE_PATH), doc_vecs, get_device())
+    print("--- data classify end ---")
 
 
 if __name__ == "__main__":
