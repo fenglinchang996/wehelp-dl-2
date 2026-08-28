@@ -83,7 +83,9 @@ def classify(corpus_file: Path, vecs: KeyedVectors, device: torch.device):
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-        print(f"Model training epoch {epoch + 1} finished, loss: {running_loss}")
+        print(
+            f"Model training epoch {epoch + 1} finished, avg loss: {running_loss / len(train_dataloader)}"
+        )
     with torch.no_grad():
         model.eval()
         correct = 0
