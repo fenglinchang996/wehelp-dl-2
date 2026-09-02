@@ -67,7 +67,7 @@ def embedding(input_corpus_path: Path):
     training_docs = read_corpus(input_corpus_path)
     epoch_logger = EpochLogger()
     model = Doc2Vec(
-        vector_size=DOC_2_VEC_VECTOR_SIZE, dm=0, dbow_words=0, min_count=2, workers=8
+        vector_size=DOC_2_VEC_VECTOR_SIZE, dm=0, dbow_words=0, min_count=2, workers=4
     )
     model.build_vocab(training_docs)
     print("--- model training start ---")
