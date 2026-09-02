@@ -1,4 +1,3 @@
-import csv
 from pathlib import Path
 
 import torch
@@ -39,20 +38,6 @@ def get_device() -> torch.device:
     return device
 
 
-def convert_data_dict(input_path: Path) -> dict[str, list[str]]:
-    with open(input_path, "r", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        data_dict: dict[str, list[str]] = {}
-        for row in reader:
-            if not row:
-                continue
-            board, title = row[0], row[1]
-            if board not in data_dict:
-                data_dict[board] = []
-            data_dict[board].append(title)
-        return data_dict
-
-
 def main():
     # print("--- data crawler start ---")
     # for board_name in BOARD_NAMES:
@@ -64,19 +49,17 @@ def main():
     #     Path(CLEANED_DATA_FILE_PATH),
     # )
     # print("--- data cleaner done ---")
-    # print("--- data tokenizer start ---")
-    # data_dict = convert_data_dict(Path(CLEANED_DATA_FILE_PATH))
-    # device = get_device()
-    # with open(TOKENIZED_DATA_FILE_PATH, "w", newline="", encoding="utf-8") as f_out:
-    #     writer = csv.writer(f_out)
-    #     for board_name in data_dict:
-    #         words_list = data_tokenizer(data_dict[board_name], device)
-    #         writer.writerows([board_name, *words] for words in words_list)
-    # print("--- data tokenizer done ---")
-    # print("--- data embedding start ---")
-    # embedding_model = data_embedding(Path(TOKENIZED_DATA_FILE_PATH))
-    # embedding_model.save(EMBEDDING_MODEL_PATH)
-    # print("--- data embedding end ---")
+    print("--- data tokenizer start ---")
+    data_tokenizer(
+        Path(CLEANED_DATA_FILE_PATH),
+        Path(TOKENIZED_DATA_FILE_PATH),
+        device=get_device(),
+    )
+    print("--- data tokenizer done ---")
+    print("--- data embedding start ---")
+    embedding_model = data_embedding(Path(TOKENIZED_DATA_FILE_PATH))
+    embedding_model.save(EMBEDDING_MODEL_PATH)
+    print("--- data embedding end ---")
     print("--- data classify start ---")
     doc2vec_model: Doc2Vec = Doc2Vec.load(EMBEDDING_MODEL_PATH)  # type: ignore
     doc_vecs = doc2vec_model.dv
