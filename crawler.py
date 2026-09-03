@@ -1,7 +1,7 @@
-import time
 import csv
-from urllib import request
+import time
 from html.parser import HTMLParser
+from urllib import request
 
 BASE_URL = "https://www.ptt.cc"
 

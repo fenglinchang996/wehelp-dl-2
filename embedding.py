@@ -5,28 +5,24 @@ from pathlib import Path
 from gensim.models.callbacks import CallbackAny2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
-DOC_2_VEC_VECTOR_SIZE = 200
-TRAINING_EPOCHS = 50
-INFERRING_EPOCHS = 50
-TESTING_DOC_COUNT = 1000
-DISPLAY_EPOCH_LOGS = True
-
 
 class EpochLogger(CallbackAny2Vec):
 
-    def __init__(self):
+    def __init__(self, total_epoches: int):
         self.epoch = 1
+        self._total_epoches = total_epoches
 
     def on_epoch_begin(self, model):
         pass
 
     def on_epoch_end(self, model):
-        if DISPLAY_EPOCH_LOGS:
-            print(f"Model training epoch {self.epoch} finished")
+        print(f"\rEpoch {self.epoch} finished ", end="", flush=True)
+        if self.epoch == self._total_epoches:
+            print(f"\r{self._total_epoches} epochs training finished", flush=True)
         self.epoch += 1
 
 
-def read_corpus(input_corpus: Path):
+def read_corpus(input_corpus: Path) -> list[TaggedDocument]:
     with open(input_corpus, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
         tagged_docs: list[TaggedDocument] = []
@@ -38,16 +34,18 @@ def read_corpus(input_corpus: Path):
     return tagged_docs
 
 
-def get_random_docs(docs: list[TaggedDocument], count: int):
-    random.seed(42)
+def get_random_docs(docs: list[TaggedDocument], count: int, random_seed: int = 42):
+    random.seed(random_seed)
     sample_size = min(count, len(docs))
     return random.sample(docs, sample_size)
 
 
-def similarity(model: Doc2Vec, testing_docs: list[TaggedDocument]):
+def similarity(
+    model: Doc2Vec, testing_docs: list[TaggedDocument], inferring_epochs: int = 50
+) -> tuple[float, float]:
     sim_ranks = []
     for doc in testing_docs:
-        vec = model.infer_vector(doc.words, epochs=INFERRING_EPOCHS)
+        vec = model.infer_vector(doc.words, epochs=inferring_epochs)
         sims = model.dv.most_similar([vec], topn=2)
         top_tags = [tag for tag, _ in sims]
         if doc.tags[0] == top_tags[0]:
@@ -63,27 +61,55 @@ def similarity(model: Doc2Vec, testing_docs: list[TaggedDocument]):
     return self_similarity, second_self_similarity
 
 
-def embedding(input_corpus_path: Path):
+def embedding(
+    input_corpus_path: Path,
+    vector_size: int = 100,
+    min_count: int = 2,
+    epochs: int = 50,
+    dm: int = 0,
+    window: int = 5,
+    workers: int = 6,
+    inferring_epochs: int = 50,
+    testing_count: int = 1000,
+    save_threshold: float = 0.8,
+    model_output_path: Path | None = None,
+    display_logs: bool = True,
+    random_seed: int = 42,
+) -> Doc2Vec:
     training_docs = read_corpus(input_corpus_path)
-    epoch_logger = EpochLogger()
+    epoch_logger = EpochLogger(total_epoches=epochs)
     model = Doc2Vec(
-        vector_size=DOC_2_VEC_VECTOR_SIZE, dm=0, dbow_words=0, min_count=2, workers=4
+        vector_size=vector_size,
+        dm=dm,
+        dbow_words=0,
+        window=window,
+        min_count=min_count,
+        workers=workers,
     )
     model.build_vocab(training_docs)
-    print("--- model training start ---")
+    print("--- Doc2Vec training start ---")
     model.train(
         training_docs,
         total_examples=model.corpus_count,
-        epochs=TRAINING_EPOCHS,
+        epochs=epochs,
         callbacks=[epoch_logger],
     )
-    print("--- model training end ---")
-    print("--- self similarity start ---")
-    testing_docs = get_random_docs(training_docs, TESTING_DOC_COUNT)
-    self_similarity, second_self_similarity = similarity(model, testing_docs)
-    print(f"self similarity with {TESTING_DOC_COUNT} docs: {self_similarity}")
-    print(
-        f"second_self_similarity with {TESTING_DOC_COUNT} docs : {second_self_similarity}"
+    print("--- Doc2Vec training end ---")
+    print("--- Self similarity start ---")
+    testing_docs = get_random_docs(
+        training_docs, testing_count, random_seed=random_seed
     )
-    print("--- self similarity end ---")
+    self_similarity, second_self_similarity = similarity(
+        model, testing_docs, inferring_epochs=inferring_epochs
+    )
+    print(f"Self similarity with {testing_count} docs: {self_similarity:.4f}")
+    print(
+        f"Second self similarity with {testing_count} docs : {second_self_similarity:.4f}"
+    )
+    print("--- Self similarity end ---")
+
+    if model_output_path is not None and second_self_similarity >= save_threshold:
+        model.save(str(model_output_path))
+        print(f"Embedding model saved successfully to {model_output_path}")
+
     return model

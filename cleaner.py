@@ -5,7 +5,7 @@ from pathlib import Path
 
 def clean_title(title: str) -> str | None:
     cleaned_title = title.strip().lower()
-    if cleaned_title.startswith("re:") or cleaned_title.startswith("fw:"):
+    if cleaned_title.startswith(("re:", "fw:")):
         return None
     cleaned_title = re.sub(r"^(?:\[.*?\]\s*)+", "", cleaned_title)
     if not cleaned_title:
@@ -13,11 +13,11 @@ def clean_title(title: str) -> str | None:
     return cleaned_title
 
 
-def cleaner(input_files: list[Path], output_file: Path):
-    with open(output_file, "w", newline="", encoding="utf-8") as f_out:
+def cleaner(inputs: list[Path], output: Path):
+    with open(output, "w", newline="", encoding="utf-8") as f_out:
         writer = csv.writer(f_out)
 
-        for input_file in input_files:
+        for input_file in inputs:
             if input_file.is_file():
                 with open(input_file, "r", encoding="utf-8") as f_in:
                     reader = csv.reader(f_in)

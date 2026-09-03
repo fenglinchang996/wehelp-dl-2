@@ -4,11 +4,19 @@ from pathlib import Path
 import torch
 from ckip_transformers.nlp import CkipPosTagger, CkipWordSegmenter
 
-STOP_POS = {"Caa", "Cab", "Cba", "Cbb", "P", "T", "I", "Di", "Nh", "DE", "SHI"}
+DEFAULT_STOP_POS = {"Caa", "Cab", "Cba", "Cbb", "P", "T", "I", "Di", "Nh", "DE", "SHI"}
 
 
-def is_stop_pos(pos: str) -> bool:
-    return pos in STOP_POS or pos.endswith("CATEGORY") or pos == "WHITESPACE"
+def is_stop_pos(
+    pos: str,
+    stop_pos: set[str] | list[str] = DEFAULT_STOP_POS,
+    allowed_pos: set[str] | list[str] | None = None,
+) -> bool:
+    if pos.endswith("CATEGORY") or pos == "WHITESPACE":
+        return True
+    if allowed_pos is not None:
+        return pos not in allowed_pos
+    return pos in stop_pos
 
 
 default_device = torch.device("cpu")
@@ -17,6 +25,9 @@ default_device = torch.device("cpu")
 def tokenizer(
     input: Path,
     output: Path,
+    stop_pos: set[str] | list[str] = DEFAULT_STOP_POS,
+    allowed_pos: set[str] | list[str] | None = None,
+    min_tokens: int = 1,
     chunk_size: int = 4096,
     batch_size: int = 256,
     device: torch.device = default_device,
@@ -31,7 +42,7 @@ def tokenizer(
         for ws_list, pos_list in zip(ws_result, pos_result):
             tokens: list[str] = []
             for w, p in zip(ws_list, pos_list):
-                if is_stop_pos(p) or not w.strip():
+                if is_stop_pos(p, stop_pos=stop_pos, allowed_pos=allowed_pos) or not w.strip():
                     continue
                 tokens.append(w.strip())
             result.append(tokens)
@@ -46,7 +57,7 @@ def tokenizer(
 
         def write(labels: list[str], tokens_list: list[list[str]]):
             for label, tokens in zip(labels, tokens_list):
-                if tokens:
+                if len(tokens) >= min_tokens:
                     writer.writerow([label, *tokens])
 
         batch_boards = []
