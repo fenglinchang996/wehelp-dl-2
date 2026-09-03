@@ -105,6 +105,7 @@ def classify(
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
     model.train()
+    avg_loss = 0
     for epoch in range(epochs):
         running_loss = 0.0
         for batch_X, batch_e in train_dataloader:
@@ -117,7 +118,15 @@ def classify(
             optimizer.step()
             running_loss += loss.item()
         avg_loss = running_loss / len(train_dataloader)
-        print(f"Epoch {epoch + 1} finished, avg loss: {avg_loss:.4f}")
+        print(
+            f"\rEpoch {epoch + 1} finished, avg loss: {avg_loss:.4f}",
+            end="",
+            flush=True,
+        )
+    print(
+        f"\r{epochs} epochs training finished, final avg loss: {avg_loss:.4f}",
+        flush=True,
+    )
     with torch.no_grad():
         model.eval()
         correct = 0
@@ -131,3 +140,8 @@ def classify(
             correct += (predicted == batch_e).sum().item()
         accuracy = correct / total
         print(f"Classify accuracy: {accuracy * 100:.2f}%")
+        return {
+            "testing_accuracy": accuracy,
+            "train_count": train_data_count,
+            "test_count": test_data_count,
+        }

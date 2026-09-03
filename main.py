@@ -7,6 +7,7 @@ from classify import classify as data_classify
 from cleaner import cleaner as data_cleaner
 from crawler import crawler as data_crawler
 from embedding import embedding as data_embedding
+from experiments_logger import log
 from tokenizer import tokenizer as data_tokenizer
 
 PATH_CONFIG = {
@@ -16,11 +17,11 @@ PATH_CONFIG = {
 }
 
 PIPELINE_CONFIG = {
-    "run_crawler": True,  # Run web crawler
-    "run_cleaner": True,  # Run data cleaner
-    "run_tokenizer": True,  # Run CKIP tokenizer
-    "run_embedding": True,  # Train Doc2Vec model
-    "run_classify": True,  # Train and evaluate classifier
+    "crawler": False,  # Run web crawler
+    "cleaner": False,  # Run data cleaner
+    "tokenizer": False,  # Run CKIP tokenizer
+    "embedding": False,  # Train Doc2Vec model
+    "classify": True,  # Train and evaluate classifier
 }
 
 GENERAL_CONFIG = {
@@ -43,7 +44,7 @@ CRAWLER_CONFIG = {
 }
 
 TOKENIZER_CONFIG = {
-    "stop_pos": [
+    "removed_pos": [
         "Caa",  # 對等連接詞
         "Cab",  # 連接詞：如等等
         "Cba",  # 連接詞：如的話
@@ -98,14 +99,14 @@ def get_device() -> torch.device:
 
 def main():
     # 1. Crawler
-    if PIPELINE_CONFIG["run_crawler"]:
+    if PIPELINE_CONFIG["crawler"]:
         print("--- data crawler start ---")
         for board_name in CRAWLER_CONFIG["board_names"]:
             data_crawler(board_name, CRAWLER_CONFIG["required_title_count"])
         print("--- data crawler done ---")
 
     # 2. Cleaner
-    if PIPELINE_CONFIG["run_cleaner"]:
+    if PIPELINE_CONFIG["cleaner"]:
         print("--- data cleaner start ---")
         data_cleaner(
             [Path(f"{board_name}.csv") for board_name in CRAWLER_CONFIG["board_names"]],
@@ -114,12 +115,12 @@ def main():
         print("--- data cleaner done ---")
 
     # 3. Tokenizer
-    if PIPELINE_CONFIG["run_tokenizer"]:
+    if PIPELINE_CONFIG["tokenizer"]:
         print("--- data tokenizer start ---")
         data_tokenizer(
             input=Path(PATH_CONFIG["cleaned_data_file"]),
             output=Path(PATH_CONFIG["tokenized_data_file"]),
-            stop_pos=TOKENIZER_CONFIG["stop_pos"],
+            stop_pos=TOKENIZER_CONFIG["removed_pos"],
             allowed_pos=TOKENIZER_CONFIG["allowed_pos"],
             min_tokens=TOKENIZER_CONFIG["min_tokens"],
             chunk_size=TOKENIZER_CONFIG["chunk_size"],
@@ -129,9 +130,10 @@ def main():
         print("--- data tokenizer done ---")
 
     # 4. Doc2Vec Embedding
-    if PIPELINE_CONFIG["run_embedding"]:
+    embedding_result = None
+    if PIPELINE_CONFIG["embedding"]:
         print("--- data embedding start ---")
-        data_embedding(
+        embedding_result = data_embedding(
             input_corpus_path=Path(PATH_CONFIG["tokenized_data_file"]),
             vector_size=DOC2VEC_CONFIG["vector_size"],
             min_count=DOC2VEC_CONFIG["min_count"],
@@ -148,11 +150,15 @@ def main():
         print("--- data embedding end ---")
 
     # 5. Classifier
-    if PIPELINE_CONFIG["run_classify"]:
+    classifier_result = None
+    if PIPELINE_CONFIG["classify"]:
         print("--- data classify start ---")
-        doc2vec_model: Doc2Vec = Doc2Vec.load(PATH_CONFIG["doc2vec_model_file"])  # type: ignore
+        if embedding_result and "model" in embedding_result:
+            doc2vec_model = embedding_result["model"]
+        else:
+            doc2vec_model: Doc2Vec = Doc2Vec.load(PATH_CONFIG["doc2vec_model_file"])  # type: ignore
         doc_vecs = doc2vec_model.dv
-        data_classify(
+        classifier_result = data_classify(
             corpus_file=Path(PATH_CONFIG["tokenized_data_file"]),
             vecs=doc_vecs,
             board_names=CRAWLER_CONFIG["board_names"],
@@ -167,6 +173,17 @@ def main():
             device=get_device(),
         )
         print("--- data classify end ---")
+
+    log(
+        pipeline_config=PIPELINE_CONFIG,
+        path_config=PATH_CONFIG,
+        tokenizer_config=TOKENIZER_CONFIG,
+        doc2vec_config=DOC2VEC_CONFIG,
+        classifier_config=CLASSIFIER_CONFIG,
+        crawler_config=CRAWLER_CONFIG,
+        embedding_result=embedding_result,
+        classifier_result=classifier_result,
+    )
 
 
 if __name__ == "__main__":

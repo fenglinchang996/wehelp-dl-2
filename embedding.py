@@ -75,7 +75,7 @@ def embedding(
     model_output_path: Path | None = None,
     display_logs: bool = True,
     random_seed: int = 42,
-) -> Doc2Vec:
+):
     training_docs = read_corpus(input_corpus_path)
     epoch_logger = EpochLogger(total_epoches=epochs)
     model = Doc2Vec(
@@ -112,4 +112,9 @@ def embedding(
         model.save(str(model_output_path))
         print(f"Embedding model saved successfully to {model_output_path}")
 
-    return model
+    result = {
+        "model": model,
+        "self_similarity": self_similarity,
+        "second_self_similarity": second_self_similarity,
+    }
+    return result
