@@ -34,6 +34,8 @@ def tokenizer(
 ):
     ws_driver = CkipWordSegmenter(model="bert-base", device=device)
     pos_driver = CkipPosTagger(model="bert-base", device=device)
+    stop_pos_set = set(stop_pos)
+    allowed_pos_set = set(allowed_pos) if allowed_pos is not None else None
 
     def tokenize(docs: list[str]):
         ws_result = ws_driver(docs, batch_size=batch_size)
@@ -42,7 +44,7 @@ def tokenizer(
         for ws_list, pos_list in zip(ws_result, pos_result):
             tokens: list[str] = []
             for w, p in zip(ws_list, pos_list):
-                if is_stop_pos(p, stop_pos=stop_pos, allowed_pos=allowed_pos) or not w.strip():
+                if is_stop_pos(p, stop_pos=stop_pos_set, allowed_pos=allowed_pos_set) or not w.strip():
                     continue
                 tokens.append(w.strip())
             result.append(tokens)
