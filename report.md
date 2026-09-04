@@ -35,9 +35,13 @@ j. PyTorch Accelerator: **MPS (Apple Silicon)** Batch Size: **64**
 
 ## E
 
-1. Change: Used PV-DM with vector size 80 and 300 epochs for Doc2Vec training.
-   Result: Even with 300 epochs, the second-self-similarity still decreased (from 91.2% to 76.9%).
-2. Change: Used smaller learning rate 0.001 for training classification model.
-   Result: The testing accuracy dropped from 85.36% to 81.10% due to the smaller learning rate under the same 30 epochs.
-3. Change: Increased training epochs from 30 to 50 for training classification model.
-   Result: No significant improvment on the testing accuracy (only slightly increased from 85.36% to 85.71%).
+1. - Change: Used PV-DM with vector size 80 and 300 epochs for Doc2Vec training.
+   - Result: Even with 300 epochs, the second-self-similarity still decreased (from 91.2% to 76.9%).
+2. - Change: Used smaller learning rate 0.001 for training classification model.
+   - Result: The testing accuracy dropped from 85.36% to 81.10% due to the smaller learning rate under the same 30 epochs.
+3. - Change: Increased training epochs from 30 to 50 for training classification model.
+   - Result: No significant improvement on the final classification testing accuracy (only slightly increased from 85.36% to 85.71%).
+4. - Change: Only Nouns and Verbs POS were allowed in tokenization.
+   - Result: Tokenized title count and self-similarity decreased a little, but no significant change in the final classification testing accuracy (85.36% to 84.09%), likely because prepositions, conjunctions, and other function words were already excluded originally, leaving mostly nouns and verbs anyway.
+5. - Change: Used Leaky ReLU as the activation function, or Adam as the optimizer.
+   - Result: No significant change in the classification testing accuracy (85.30% with Leaky ReLU and 85.31% with Adam, compared to the 85.36% baseline).
