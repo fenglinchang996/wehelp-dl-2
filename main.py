@@ -20,7 +20,7 @@ PIPELINE_CONFIG = {
     "crawler": False,  # Run web crawler
     "cleaner": False,  # Run data cleaner
     "tokenizer": False,  # Run CKIP tokenizer
-    "embedding": False,  # Train Doc2Vec model
+    "embedding": True,  # Train Doc2Vec model
     "classify": True,  # Train and evaluate classifier
 }
 
