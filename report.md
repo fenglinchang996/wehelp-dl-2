@@ -16,22 +16,22 @@ I filtered out tokens with specific POS tags, punctuation, and whitespace, and r
 
 ## C. Parameters of Doc2Vec Embedding Model
 
-a. Total Number of Training Documents: **604777**
-b. Output Vector Size: **100** Min Count: **2** Epochs: **50** Workers: **4**
-c. First Self Similarity: **89.10%** Second Self Similarity: **91.20%**
+- a. Total Number of Training Documents: **604777**
+- b. Output Vector Size: **100** Min Count: **2** Epochs: **50** Workers: **4**
+- c. First Self Similarity: **89.10%** Second Self Similarity: **91.20%**
 
 ## D. Parameters of Multi-Class Classification Model
 
-a. Arrangement of Linear Layers: **100x100x50x9**
-b. Activation Function for Hidden Layers: **ReLU**
-c. Activation Function for Output Layers: **Softmax**
-d. Loss Function: **Categorical Cross Entropy**
-e. Algorithms for Back-Propagation: **SGD (Stochastic Gradient Descent)**
-f. Total Number of Training Documents: **483821**
-g. Total Number of Testing Documents: **120956**
-h. Epochs: **30** Learning Rate: **0.01**
-i. Accuracy on Testing Documents: **85.36%**
-j. PyTorch Accelerator: **MPS (Apple Silicon)** Batch Size: **64**
+- a. Arrangement of Linear Layers: **100x100x50x9**
+- b. Activation Function for Hidden Layers: **ReLU**
+- c. Activation Function for Output Layers: **Softmax**
+- d. Loss Function: **Categorical Cross Entropy**
+- e. Algorithms for Back-Propagation: **SGD (Stochastic Gradient Descent)**
+- f. Total Number of Training Documents: **483821**
+- g. Total Number of Testing Documents: **120956**
+- h. Epochs: **30** Learning Rate: **0.01**
+- i. Accuracy on Testing Documents: **85.36%**
+- j. PyTorch Accelerator: **MPS (Apple Silicon)** Batch Size: **64**
 
 ## E
 
