@@ -22,7 +22,7 @@ class BoardPredictor:
 
         self.doc2vec: Doc2Vec = Doc2Vec.load(str(doc2vec_path))  # type: ignore
 
-        classifier_info = torch.load(str(classifier_path))
+        classifier_info = torch.load(str(classifier_path), map_location=self.device)
         self.id_to_board = classifier_info["id_to_board"]
         self.classifier = NeuralNetwork(
             input_dim=classifier_info["input_dim"],
