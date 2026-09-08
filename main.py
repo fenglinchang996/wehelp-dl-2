@@ -20,7 +20,7 @@ PIPELINE_CONFIG = {
     "crawler": False,  # Run web crawler
     "cleaner": False,  # Run data cleaner
     "tokenizer": False,  # Run CKIP tokenizer
-    "embedding": True,  # Train Doc2Vec model
+    "embedding": False,  # Train Doc2Vec model
     "classify": True,  # Train and evaluate classifier
 }
 
@@ -81,7 +81,7 @@ CLASSIFIER_CONFIG = {
     "optimizer_type": "sgd",  # Optimizer: 'sgd', 'adam'
     "learning_rate": 0.01,  # Learning rate
     "epochs": 30,  # Training epochs
-    "batch_size": 64,  # DataLoader batch size
+    "batch_size": 512,  # DataLoader batch size
     "train_ratio": 0.8,  # Ratio of dataset for training (e.g. 0.8 for 8:2)
 }
 
@@ -170,7 +170,6 @@ def main():
             batch_size=CLASSIFIER_CONFIG["batch_size"],
             train_ratio=CLASSIFIER_CONFIG["train_ratio"],
             random_seed=GENERAL_CONFIG["random_seed"],
-            device=get_device(),
         )
         print("--- data classify end ---")
 
