@@ -5,22 +5,17 @@ from gensim.models import Doc2Vec
 
 from classify import classify as data_classify
 from cleaner import cleaner as data_cleaner
+from config import PATH_CONFIG
 from crawler import crawler as data_crawler
 from embedding import embedding as data_embedding
 from experiments_logger import log
 from tokenizer import tokenizer as data_tokenizer
 
-PATH_CONFIG = {
-    "cleaned_data_file": "cleaned_data.csv",
-    "tokenized_data_file": "tokenized_data.csv",
-    "doc2vec_model_file": "doc2vec.model",
-}
-
 PIPELINE_CONFIG = {
     "crawler": False,  # Run web crawler
     "cleaner": False,  # Run data cleaner
     "tokenizer": False,  # Run CKIP tokenizer
-    "embedding": False,  # Train Doc2Vec model
+    "embedding": True,  # Train Doc2Vec model
     "classify": True,  # Train and evaluate classifier
 }
 
@@ -145,6 +140,9 @@ def main():
             testing_count=DOC2VEC_CONFIG["testing_count"],
             save_threshold=DOC2VEC_CONFIG["save_threshold"],
             model_output_path=Path(PATH_CONFIG["doc2vec_model_file"]),
+            inference_model_output_path=Path(
+                PATH_CONFIG["doc2vec_inference_model_file"]
+            ),
             random_seed=GENERAL_CONFIG["random_seed"],
         )
         print("--- data embedding end ---")
@@ -157,6 +155,7 @@ def main():
             doc2vec_model = embedding_result["model"]
         else:
             doc2vec_model: Doc2Vec = Doc2Vec.load(PATH_CONFIG["doc2vec_model_file"])  # type: ignore
+
         doc_vecs = doc2vec_model.dv
         classifier_result = data_classify(
             corpus_file=Path(PATH_CONFIG["tokenized_data_file"]),
@@ -170,6 +169,7 @@ def main():
             batch_size=CLASSIFIER_CONFIG["batch_size"],
             train_ratio=CLASSIFIER_CONFIG["train_ratio"],
             random_seed=GENERAL_CONFIG["random_seed"],
+            model_output_path=Path(PATH_CONFIG["classifier_model_file"]),
         )
         print("--- data classify end ---")
 

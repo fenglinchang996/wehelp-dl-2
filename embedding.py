@@ -1,5 +1,7 @@
+import copy
 import csv
 import random
+import numpy as np
 from pathlib import Path
 
 from gensim.models.callbacks import CallbackAny2Vec
@@ -73,6 +75,7 @@ def embedding(
     testing_count: int = 1000,
     save_threshold: float = 0.8,
     model_output_path: Path | None = None,
+    inference_model_output_path: Path | None = None,
     display_logs: bool = True,
     random_seed: int = 42,
 ):
@@ -111,6 +114,14 @@ def embedding(
     if model_output_path is not None and second_self_similarity >= save_threshold:
         model.save(str(model_output_path))
         print(f"Embedding model saved successfully to {model_output_path}")
+        if inference_model_output_path is not None:
+            original_dv_vecs = model.dv.vectors
+            model.dv.vectors = np.empty((0, model.vector_size), dtype=np.float32)
+            model.save(str(inference_model_output_path))
+            model.dv.vectors = original_dv_vecs
+            print(
+                f"Inference-only embedding model saved to {inference_model_output_path}"
+            )
 
     result = {
         "model": model,

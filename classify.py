@@ -7,10 +7,7 @@ from gensim.models.doc2vec import KeyedVectors
 from torch import Tensor, nn, optim
 from torch.utils.data import DataLoader, Dataset, random_split
 
-ACTIVATION_MAP = {
-    "relu": nn.ReLU,
-    "leaky_relu": nn.LeakyReLU,
-}
+from model import NeuralNetwork
 
 
 class CustomDataset(Dataset[tuple[Tensor, Tensor]]):
@@ -23,29 +20,6 @@ class CustomDataset(Dataset[tuple[Tensor, Tensor]]):
 
     def __getitem__(self, idx: int) -> tuple[Tensor, Tensor]:
         return self.X[idx], self.e[idx]
-
-
-class NeuralNetwork(nn.Module):
-    def __init__(
-        self,
-        input_dim: int,
-        hidden_layers: list[int],
-        class_num: int,
-        activation: str = "relu",
-    ):
-        super().__init__()
-        act = ACTIVATION_MAP.get(activation.lower(), nn.ReLU)
-        layers: list[nn.Module] = []
-        prev_dim = input_dim
-        for h_dim in hidden_layers:
-            layers.append(nn.Linear(prev_dim, h_dim))
-            layers.append(act())
-            prev_dim = h_dim
-        layers.append(nn.Linear(prev_dim, class_num))
-        self.net = nn.Sequential(*layers)
-
-    def forward(self, x: Tensor) -> Tensor:
-        return self.net(x)
 
 
 default_device = torch.device("cpu")
@@ -64,6 +38,7 @@ def classify(
     train_ratio: float = 0.8,
     random_seed: int = 42,
     device: torch.device = default_device,
+    model_output_path: Path | None = None,
 ):
     board_to_id = {board: i for i, board in enumerate(board_names)}
     X_data = []
@@ -140,6 +115,20 @@ def classify(
             correct += (predicted == batch_e).sum().item()
         accuracy = correct / total
         print(f"Classify accuracy: {accuracy * 100:.2f}%")
+        if model_output_path is not None:
+            id_to_board = {v: k for k, v in board_to_id.items()}
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "input_dim": input_dim,
+                    "hidden_layers": hidden_layers,
+                    "class_num": class_num,
+                    "activation": activation,
+                    "board_to_id": board_to_id,
+                    "id_to_board": id_to_board,
+                },
+                str(model_output_path),
+            )
         return {
             "testing_accuracy": accuracy,
             "train_count": train_data_count,
