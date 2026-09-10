@@ -25,7 +25,7 @@
       <div class="flex justify-center">
         <button
           type="button"
-          class="border-[1px] border-gray-400 rounded-[5px] px-[12px] py-[4px] bg-gray-100"
+          class="border-[1px] border-gray-400 rounded-[5px] px-[12px] py-[4px] bg-gray-100 active:bg-gray-300"
           onclick="handlePredict()"
         >
           預測分類
@@ -41,7 +41,7 @@
         {% for board in boards %}
         <button
           type="button"
-          class="border-[1px] border-gray-400 rounded-[5px] px-[12px] py-[4px] bg-gray-100"
+          class="border-[1px] border-gray-400 rounded-[5px] px-[12px] py-[4px] bg-gray-100 active:bg-gray-300"
           onclick="sendFeedback('{{ board }}')"
         >
           {{ board }}
@@ -52,9 +52,13 @@
   </body>
   <script>
     const titleInput = document.getElementById("title-input");
+    const resultBlock = document.getElementById("result-block");
+    const predictedResult = document.getElementById("predicted-result");
+
     let title;
 
     async function handlePredict() {
+      resultBlock.classList.add("hidden");
       title = titleInput.value.trim();
       if (!title) return;
 
@@ -65,8 +69,8 @@
 
       const data = await res.json();
 
-      document.getElementById("predicted-result").innerText = data.label;
-      document.getElementById("result-block").classList.remove("hidden");
+      predictedResult.innerText = data.label;
+      resultBlock.classList.remove("hidden");
     }
 
     async function sendFeedback(label) {
