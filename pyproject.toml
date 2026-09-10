@@ -2,13 +2,15 @@
 name = "wehelp-dl-2"
 version = "0.1.0"
 description = "Add your description here"
-authors = [
-    { name = "FLC", email = "paulespling@gmail.com" }
-]
+authors = [{ name = "FLC", email = "paulespling@gmail.com" }]
 requires-python = "==3.12.*"
 dependencies = [
-    "ckip-transformers>=0.3.4",
-    "gensim>=4.4.0",
-    "numpy>=2.5.2",
-    "torch>=2.13.0",
+  "ckip-transformers>=0.3.4",
+  "fastapi[standard]>=0.141.1",
+  "gensim>=4.4.0",
+  "jinja2>=3.1.6",
+  "numpy>=2.5.2",
+  "torch>=2.13.0",
 ]
+[tool.fastapi]
+entrypoint = "app:app"

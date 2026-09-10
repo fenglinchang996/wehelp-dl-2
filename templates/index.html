@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>短文本分類預測</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div
+      class="flex items-center justify-center font-bold text-white text-[32px] h-[96px] bg-cyan-900"
+    >
+      歡迎使用短文本分類預測
+    </div>
+    <div class="*:my-[12px] mb-[24px]">
+      <div class="font-bold text-[26px] text-center">輸入一篇文章的標題</div>
+      <div class="flex justify-center">
+        <input
+          id="title-input"
+          name="title"
+          type="text"
+          class="border-[1px] border-gray-400 rounded-[5px] p-[4px] w-[360px]"
+        />
+      </div>
+      <div class="flex justify-center">
+        <button
+          type="button"
+          class="border-[1px] border-gray-400 rounded-[5px] px-[12px] py-[4px] bg-gray-100"
+          onclick="handlePredict()"
+        >
+          預測分類
+        </button>
+      </div>
+    </div>
+    <div id="result-block" class="*:my-[12px] hidden">
+      <div class="font-bold text-[26px] text-center">
+        預測結果：<span id="predicted-result"></span>
+      </div>
+      <div class="text-[26px] text-center">選擇您認為更正確的分類</div>
+      <div class="flex flex-wrap justify-center gap-[2px]">
+        {% for board in boards %}
+        <button
+          type="button"
+          class="border-[1px] border-gray-400 rounded-[5px] px-[12px] py-[4px] bg-gray-100"
+          onclick="sendFeedback('{{ board }}')"
+        >
+          {{ board }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+  <script>
+    const titleInput = document.getElementById("title-input");
+    let title;
+
+    async function handlePredict() {
+      title = titleInput.value.trim();
+      if (!title) return;
+
+      const res = await fetch(
+        `/api/model/prediction?title=${encodeURIComponent(title)}`,
+      );
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      document.getElementById("predicted-result").innerText = data.label;
+      document.getElementById("result-block").classList.remove("hidden");
+    }
+
+    async function sendFeedback(label) {
+      if (!title) return;
+
+      const res = await fetch("/api/model/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title, label: label }),
+      });
+      if (!res.ok) return;
+      const result = await res.json();
+      console.log(result);
+    }
+  </script>
+</html>
